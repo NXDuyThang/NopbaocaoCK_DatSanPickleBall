@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Đặt sân";
+    var court = ViewBag.Court as DAL.Models.Court;
+}
+<h2>Đặt sân @court?.Name</h2>
+
+<form asp-action="Create" method="post">
+    <input type="hidden" name="courtId" value="@court?.Id" />
+    <div class="mb-3">
+        <label class="form-label">Ngày đặt</label>
+        <input type="date" class="form-control" name="bookingDate" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Giờ bắt đầu</label>
+        <input type="time" class="form-control" name="startTime" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Giờ kết thúc</label>
+        <input type="time" class="form-control" name="endTime" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Ghi chú (nếu có)</label>
+        <textarea class="form-control" name="notes"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Xác nhận đặt sân</button>
+</form>
+

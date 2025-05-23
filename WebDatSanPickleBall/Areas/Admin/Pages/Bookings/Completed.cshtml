@@ -1,0 +1,64 @@
+@page
+@using DAL.Models
+@using DAL.Data
+@inject ApplicationDbContext _context
+@{
+    ViewData["Title"] = "Danh sách đặt sân đã hoàn thành";
+    var completedBookings = _context.Bookings
+        .Where(b => b.Status == BookingStatus.Completed)
+        .OrderByDescending(b => b.BookingDate)
+        .ThenByDescending(b => b.StartTime)
+        .ToList();
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4 text-primary">Danh sách đặt sân đã hoàn thành</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Sân</th>
+                    <th>Người đặt</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Chi tiết</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (completedBookings.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Chưa có đặt sân hoàn thành nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    int stt = 1;
+                    foreach (var booking in completedBookings)
+                    {
+                        <tr>
+                            <td>@(stt++)</td>
+                            <td>@booking.Court?.Name</td>
+                            <td>@booking.User?.FullName</td>
+                            <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                            <td>@booking.TotalAmount.ToString("N0") VNĐ</td>
+                            <td>
+                                <span class="badge bg-success">Hoàn thành</span>
+                            </td>
+                            <td>
+                                <a asp-area="Admin" asp-page="/Bookings/Details" asp-route-id="@booking.BookingID" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <a asp-area="Admin" asp-page="/Index" class="btn btn-secondary mt-3">
+        <i class="bi bi-arrow-left"></i> Quay lại bảng điều khiển
+    </a>
+</div> 

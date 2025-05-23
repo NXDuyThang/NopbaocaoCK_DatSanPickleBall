@@ -1,0 +1,71 @@
+@page
+@model WebDatSanPickleBall.Areas.Admin.Pages.Courts.IndexModel
+@{
+    ViewData["Title"] = "Quản lý sân";
+    Layout = "/Areas/Admin/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Quản lý sân</h2>
+    <h5 class="mb-3">Tổng số sân: @Model.CourtCount</h5>
+
+    <div class="row mb-3">
+        <div class="col">
+            <a asp-page="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm sân mới
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>@Html.DisplayNameFor(m => m.Courts[0].Name)</th>
+                            <th>@Html.DisplayNameFor(m => m.Courts[0].Type)</th>
+                            <th>@Html.DisplayNameFor(m => m.Courts[0].Price)</th>
+                            <th>@Html.DisplayNameFor(m => m.Courts[0].IsActive)</th>
+                            <th>@Html.DisplayNameFor(m => m.Courts[0].CreatedAt)</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var court in Model.Courts)
+                        {
+                            <tr>
+                                <td>@court.Name</td>
+                                <td>@court.Type</td>
+                                <td>@court.Price.ToString("N0") VNĐ/giờ</td>
+                                <td>
+                                    <span class="badge @(court.IsActive ? "bg-success" : "bg-danger")">
+                                        @(court.IsActive ? "Hoạt động" : "Không hoạt động")
+                                    </span>
+                                </td>
+                                <td>@court.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a asp-page="./Edit" asp-route-id="@court.Id" class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a asp-page="./Details" asp-route-id="@court.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                        <a asp-page="./Delete" asp-route-id="@court.Id" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

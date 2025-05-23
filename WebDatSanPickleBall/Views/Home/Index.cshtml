@@ -1,0 +1,197 @@
+﻿@model IEnumerable<DAL.Models.Court>
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hệ thống đặt sân Pickleball - Đặt sân thể thao nhanh chóng và dễ dàng.">
+    <meta name="keywords" content="Pickleball, Đặt sân, Sân thể thao, Thể thao, Booking">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yourdomain.vn/" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon" />
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <style>
+        #slider {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+        }
+
+            #slider img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                position: absolute;
+                top: 0;
+                left: 100%;
+                transition: left 1s ease-in-out;
+            }
+
+                #slider img.active {
+                    left: 0;
+                }
+    </style>
+</head>
+<body>
+    <header class="bg-primary text-white py-4" role="banner">
+        <div class="container-fluid px-4">
+            <h1 class="text-center" tabindex="0">Chào mừng đến với hệ thống đặt sân Pickleball!</h1>
+        </div>
+    </header>
+
+    <!-- Slider -->
+    <section id="slider" class="my-3" role="region" aria-label="Banner quảng cáo">
+        <img src="~/images/banner1.jpg" class="active" alt="Khuyến mãi đặt sân" />
+        <img src="~/images/banner2.jpg" alt="Sân đẹp hiện đại" />
+        <img src="~/images/banner3.jpg" alt="Đặt sân nhanh chóng" />
+    </section>
+
+    <!-- Main -->
+    <main class="container-fluid px-4 mt-5" role="main">
+        <h2 class="mb-4 text-center text-primary" tabindex="0">Danh sách các sân Pickleball</h2>
+
+        <div class="container">
+            <!-- Search and Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="searchString" class="form-label">Tìm kiếm</label>
+                            <input type="text" class="form-control" id="searchString" name="searchString" 
+                                   value="@ViewData["SearchString"]" placeholder="Tên sân hoặc vị trí...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="courtType" class="form-label">Loại sân</label>
+                            <select class="form-select" id="courtType" name="courtType">
+                                <option value="">Tất cả</option>
+                                @foreach (var type in (List<string>)ViewData["CourtTypes"])
+                                {
+                                    <option value="@type" selected="@(type == ViewData["CourtType"]?.ToString())">@type</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="minPrice" class="form-label">Giá từ</label>
+                            <input type="number" class="form-control" id="minPrice" name="minPrice" 
+                                   value="@ViewData["MinPrice"]" min="0" step="10000">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="maxPrice" class="form-label">Giá đến</label>
+                            <input type="number" class="form-control" id="maxPrice" name="maxPrice" 
+                                   value="@ViewData["MaxPrice"]" min="0" step="10000">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Tìm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Courts Grid -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                @foreach (var court in Model)
+                {
+                    var todayBookings = ((List<DAL.Models.Booking>)ViewData["TodayBookings"])
+                        .Where(b => b.CourtID == court.Id)
+                        .ToList();
+                    var isAvailable = !todayBookings.Any();
+
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">@court.Name</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">@court.Type</h6>
+                                <p class="card-text">
+                                    <i class="bi bi-geo-alt"></i> @court.Location<br>
+                                    <i class="bi bi-currency-dollar"></i> @court.Price.ToString("N0") VNĐ/giờ
+                                </p>
+                                @if (!string.IsNullOrEmpty(court.Description))
+                                {
+                                    <p class="card-text">@court.Description</p>
+                                }
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge rounded-pill @(court.IsActive ? "bg-success" : "bg-danger")">
+                                        @(court.IsActive ? "Hoạt động" : "Không hoạt động")
+                                    </span>
+                                    @if (!court.IsActive)
+                                    {
+                                        <button class="btn btn-danger btn-sm" disabled>Không thể đặt</button>
+                                    }
+                                    else if (todayBookings.Any(b => b.Status == DAL.Models.BookingStatus.Pending || b.Status == DAL.Models.BookingStatus.Confirmed))
+                                    {
+                                        <button class="btn btn-warning btn-sm" disabled>Sân đang được đặt</button>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Home" asp-action="CourtDetails" asp-route-courtId="@court.Id" class="btn btn-success btn-sm" aria-label="Đặt sân @court.Name">
+                                            Đặt sân
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info mt-4">
+                    Không tìm thấy sân nào phù hợp với tiêu chí tìm kiếm.
+                </div>
+            }
+        </div>
+    </main>
+    <!-- Google Map Section -->
+    <section class="container-fluid px-4 mb-5" role="region" aria-label="Vị trí hệ thống sân">
+        <h3 class="text-center text-primary mb-4" tabindex="0">Vị trí hệ thống sân</h3>
+        <div class="ratio ratio-16x9 rounded-4 shadow-sm">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d7451.072827501678!2d106.7045037!3d10.7753886!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3174d1085e2b1c37%3A0x73bfa5616464d0ee!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBUaOG7pyBE4bqndSBN4buZdA!5e1!3m2!1svi!2s!4v1747241299753!5m2!1svi!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><iframe src="https: //www.google.com/maps/embed?pb =!1m14!1m8!1m3!1d7451.072827501678!2d106.7045037!3d10.7753886!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3174d1085e2b1c37%3A0x73bfa5616464d0ee!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBUaOG7pyBE4bqndSBN4buZdA!5e1!3m2!1svi!2s!4v1747241299753!5m2!1svi!2s"
+                    width="600"
+                    height="450"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    aria-label="Google Maps - Vị trí hệ thống sân">
+            </iframe>
+        </div>
+    </section>
+
+    <!-- Slider script -->
+    <script>
+        const images = document.querySelectorAll('#slider img');
+        let current = 0;
+
+        function showNextImage() {
+            images[current].classList.remove('active');
+            current = (current + 1) % images.length;
+            images[current].classList.add('active');
+        }
+
+        setInterval(showNextImage, 4000);
+    </script>
+
+    @section Scripts {
+        <script>
+            // Auto-submit form when filters change
+            document.querySelectorAll('select, input[type="number"]').forEach(element => {
+                element.addEventListener('change', () => element.form.submit());
+            });
+        </script>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

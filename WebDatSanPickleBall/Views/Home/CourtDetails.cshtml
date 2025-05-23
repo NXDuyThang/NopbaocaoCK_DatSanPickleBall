@@ -1,0 +1,166 @@
+@model DAL.Models.Court
+@{
+    ViewData["Title"] = Model.Name;
+    var today = (DateOnly)ViewData["Today"];
+    var todayBookings = (List<DAL.Models.Booking>)ViewData["TodayBookings"];
+    var timeSlots = (List<DAL.Models.TimeSlot>)ViewData["TimeSlots"];
+    var availability = (DAL.Models.CourtAvailability)ViewData["Availability"];
+}
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Court Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">@Model.Name</h2>
+                    <h6 class="card-subtitle mb-3 text-muted">@Model.Type</h6>
+                    
+                    <div class="mb-3">
+                        <h5>Thông tin sân</h5>
+                        <p><i class="bi bi-geo-alt"></i> <strong>Vị trí:</strong> @Model.Location</p>
+                        <p><i class="bi bi-currency-dollar"></i> <strong>Giá:</strong> @Model.Price.ToString("N0") VNĐ/giờ</p>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p><i class="bi bi-info-circle"></i> <strong>Mô tả:</strong> @Model.Description</p>
+                        }
+                    </div>
+
+                    @if (availability != null && !availability.IsAvailable)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Sân không khả dụng vào ngày này.
+                            @if (!string.IsNullOrEmpty(availability.Note))
+                            {
+                                <br><small>@availability.Note</small>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Đặt sân</h5>
+                    
+                    <form id="bookingForm" asp-controller="Courts" asp-action="Book" method="post">
+                        <input type="hidden" name="courtId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label for="bookingDate" class="form-label">Ngày đặt</label>
+                            <input type="date" class="form-control" id="bookingDate" name="bookingDate" 
+                                   min="@today.ToString("yyyy-MM-dd")" value="@today.ToString("yyyy-MM-dd")" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Ghi chú (không bắt buộc)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="bookButton">
+                            Đặt sân
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Schedule -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Lịch đặt sân hôm nay (@today.ToString("dd/MM/yyyy"))</h5>
+            @if (todayBookings.Any())
+            {
+                <div class="alert alert-danger">Sân đã được đặt cho ngày này.</div>
+            }
+            else
+            {
+                <div class="alert alert-success">Sân còn trống, bạn có thể đặt!</div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const courtId = @Model.Id;
+        const hourlyRate = @Model.Price;
+        let availableSlots = [];
+
+        // Update available time slots when date changes
+        document.getElementById('bookingDate').addEventListener('change', async function() {
+            const date = this.value;
+            if (!date) return;
+
+            try {
+                const response = await fetch(`/Home/GetCourtAvailability/${courtId}?date=${date}`);
+                if (!response.ok) throw new Error('Failed to fetch availability');
+                
+                const data = await response.json();
+                availableSlots = data.availableSlots;
+                
+                updateTimeSlotOptions();
+                updateBookingInfo();
+            } catch (error) {
+                console.error('Error fetching court availability:', error);
+                //alert('Không thể tải thông tin khung giờ. Vui lòng thử lại.');
+            }
+        });
+
+        // Update time slot options based on available slots
+        function updateTimeSlotOptions() {
+            const select = document.getElementById('timeSlot');
+            select.innerHTML = '<option value="">Chọn khung giờ...</option>';
+            
+            availableSlots.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = `${slot.startTime}-${slot.endTime}`;
+                option.textContent = `${slot.startTime} - ${slot.endTime}`;
+                option.dataset.startTime = slot.startTime;
+                option.dataset.endTime = slot.endTime;
+                select.appendChild(option);
+            });
+
+            document.getElementById('bookButton').disabled = availableSlots.length === 0;
+        }
+
+        // Update booking info when time slot changes
+        document.getElementById('timeSlot').addEventListener('change', updateBookingInfo);
+
+        function updateBookingInfo() {
+            const select = document.getElementById('timeSlot');
+            const option = select.selectedOptions[0];
+            const info = document.getElementById('bookingInfo');
+            
+            if (!option || !option.value) {
+                info.classList.add('d-none');
+                return;
+            }
+
+            const startTime = option.dataset.startTime;
+            const endTime = option.dataset.endTime;
+            
+            // Calculate hours and total price
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            const hours = (end - start) / (1000 * 60 * 60);
+            const totalPrice = hours * hourlyRate;
+
+            document.getElementById('totalHours').textContent = hours.toFixed(1);
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            info.classList.remove('d-none');
+        }
+
+        // Initialize on page load
+        document.getElementById('bookingDate').dispatchEvent(new Event('change'));
+    </script>
+} 

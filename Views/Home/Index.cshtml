@@ -1,0 +1,112 @@
+@model IEnumerable<DAL.Models.Court>
+@{
+    ViewData["Title"] = "Đặt Sân Pickleball";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Đặt sân Pickleball - Chọn sân và thời gian phù hợp với bạn.">
+    <meta name="keywords" content="Pickleball, Đặt sân, Sân thể thao, Thể thao">
+    <title>@ViewData["Title"]</title>
+    <!-- Add links to CSS files -->
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Pickleball Booking</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="About">Giới thiệu</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mt-4">
+        <h1 class="text-center">Đặt Sân Pickleball</h1>
+
+        <section class="row">
+            @foreach (var court in Model)
+            {
+                <article class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="card-title">@court.Name</h2>
+                            <p class="card-text">
+                                <strong>Loại sân:</strong> @court.Type <br />
+                                <strong>Vị trí:</strong> @court.Location <br />
+                                <strong>Giá:</strong> @court.Price.ToString("N0") VNĐ/giờ <br />
+                                <strong>Trạng thái:</strong>
+                                <span class="badge @(court.IsActive ? "bg-success" : "bg-danger")">
+                                    @(court.IsActive ? "Hoạt động" : "Không hoạt động")
+                                </span>
+                            </p>
+                            <a asp-controller="Home" asp-action="CourtDetails" asp-route-courtId="@court.Id" class="btn btn-outline-primary btn-sm">
+                                Xem chi tiết
+                            </a>
+                            @if (court.IsActive)
+                            {
+                                <a asp-controller="Home" asp-action="CourtDetails" asp-route-courtId="@court.Id" class="btn btn-success btn-sm" aria-label="Đặt sân @court.Name">
+                                    Đặt sân
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+        </section>
+
+        <!-- Booking Modal -->
+        <div class="modal fade" id="bookingModal" tabindex="-1" role="dialog" aria-labelledby="bookingModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bookingModalLabel">Đặt Sân</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="bookingForm">
+                            <input type="hidden" id="courtId" name="courtId" />
+                            <div class="form-group">
+                                <label for="bookingDate">Ngày đặt</label>
+                                <input type="date" class="form-control" id="bookingDate" name="bookingDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bookingTime">Thời gian</label>
+                                <input type="time" class="form-control" id="bookingTime" name="bookingTime" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Xác nhận đặt sân</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-5">
+        <p class="text-center">© 2023 Pickleball Booking. All rights reserved.</p>
+    </footer>
+
+    <!-- Add links to JavaScript files -->
+    <script>
+        function openBookingModal(courtId) {
+            document.getElementById('courtId').value = courtId;
+            $('#bookingModal').modal('show');
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Handle booking submission here
+            alert('Đặt sân thành công!');
+            $('#bookingModal').modal('hide');
+        });
+    </script>
+</body>
+</html> 

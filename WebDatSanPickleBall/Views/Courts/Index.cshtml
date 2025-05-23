@@ -1,0 +1,47 @@
+@model IEnumerable<DAL.Models.Court>
+@{
+    ViewData["Title"] = "Danh sách sân";
+}
+<h2 class="mb-4">Danh sách sân Pickleball</h2>
+<main class="container-fluid px-4 mt-5" role="main">
+    <h2 class="mb-4 text-center text-primary" tabindex="0">Danh sách các sân Pickleball</h2>
+
+    <section class="row" aria-label="Danh sách sân">
+        @foreach (var court in Model)
+        {
+            <article class="col-sm-12 col-md-6 col-lg-4 col-xl-3 mb-4" aria-label="Thông tin sân">
+                <div class="card h-100 shadow-sm border-0 rounded-4" role="region">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div>
+                            <h4 class="card-title text-primary" tabindex="0">@court.Name</h4>
+                            <p class="card-text text-muted mb-3">
+                                <strong>Loại sân:</strong> @court.Type <br />
+                                <strong>Vị trí:</strong> @court.Location <br />
+                                <strong>Giá:</strong> <span class="text-danger fw-bold">@court.Price.ToString("N0")</span> VNĐ/giờ <br />
+                                <strong>Trạng thái:</strong>
+                                <span class="badge rounded-pill @(court.IsActive ? "bg-success" : "bg-secondary")">
+                                    @(court.IsActive ? "Hoạt động" : "Không hoạt động")
+                                </span>
+                            </p>
+                        </div>
+                        <div class="mt-auto d-flex justify-content-between">
+                            <a asp-controller="Home" asp-action="CourtDetails" asp-route-id="@court.Id" class="btn btn-outline-primary btn-sm" aria-label="Xem chi tiết sân @court.Name">
+                                Xem chi tiết
+                            </a>
+                            @if (court.IsActive)
+                            {
+                                <a asp-controller="Home" asp-action="CourtDetails" asp-route-courtId="@court.Id" class="btn btn-success btn-sm" aria-label="Đặt sân @court.Name">
+                                    Đặt sân
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary btn-sm" disabled aria-disabled="true">Không khả dụng</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </article>
+        }
+    </section>
+</main>

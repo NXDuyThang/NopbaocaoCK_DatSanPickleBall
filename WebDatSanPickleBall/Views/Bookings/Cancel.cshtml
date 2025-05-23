@@ -1,0 +1,77 @@
+@model DAL.Models.Booking
+@{
+    ViewData["Title"] = "Hủy đặt sân";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Xác nhận hủy đặt sân</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Bạn có chắc chắn muốn hủy đặt sân này?
+                    </div>
+
+                    <div class="booking-details mb-4">
+                        <h5>Thông tin đặt sân</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Sân:</dt>
+                            <dd class="col-sm-8">@Model.Court.Name</dd>
+
+                            <dt class="col-sm-4">Ngày đặt:</dt>
+                            <dd class="col-sm-8">@Model.BookingDate.ToString("dd/MM/yyyy")</dd>
+
+                            <dt class="col-sm-4">Giờ đặt:</dt>
+                            <dd class="col-sm-8">@Model.StartTime.ToString("HH:mm") - @Model.EndTime.ToString("HH:mm")</dd>
+
+                            <dt class="col-sm-4">Tổng tiền:</dt>
+                            <dd class="col-sm-8">@Model.TotalAmount.ToString("N0") VNĐ</dd>
+
+                            <dt class="col-sm-4">Trạng thái:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetStatusBadgeClass(Model.Status)">
+                                    @GetStatusText(Model.Status)
+                                </span>
+                            </dd>
+                        </dl>
+                    </div>
+
+                    <form method="post" asp-action="Cancel" asp-route-id="@Model.BookingID">
+                        @Html.AntiForgeryToken()
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Xác nhận hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(DAL.Models.BookingStatus status) => status switch
+    {
+        DAL.Models.BookingStatus.Pending => "bg-warning",
+        DAL.Models.BookingStatus.Confirmed => "bg-primary",
+        DAL.Models.BookingStatus.Cancelled => "bg-danger",
+        DAL.Models.BookingStatus.Completed => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    string GetStatusText(DAL.Models.BookingStatus status) => status switch
+    {
+        DAL.Models.BookingStatus.Pending => "Chờ xác nhận",
+        DAL.Models.BookingStatus.Confirmed => "Đã xác nhận",
+        DAL.Models.BookingStatus.Cancelled => "Đã hủy",
+        DAL.Models.BookingStatus.Completed => "Hoàn thành",
+        _ => status.ToString()
+    };
+} 

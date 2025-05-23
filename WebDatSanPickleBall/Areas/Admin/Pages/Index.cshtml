@@ -1,0 +1,176 @@
+@page
+@using Microsoft.AspNetCore.Identity
+@using DAL.Models
+@using DAL.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<User> UserManager
+@inject ApplicationDbContext _context
+@inject SignInManager<User> SignInManager
+@{
+    ViewData["Title"] = "Quản trị";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Bảng điều khiển</h1>
+
+    <div class="row">
+        <!-- Tổng số người dùng -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số người dùng</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@UserManager.Users.Count()</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tổng số sân -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng số sân</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@_context.Courts.Count()</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-table-tennis fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tổng số đặt sân hoàn thành -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tổng số đặt sân</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@_context.Bookings.Count(b => b.Status == BookingStatus.Completed)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doanh thu -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Doanh thu</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(_context.Bookings.Where(b => b.Status == BookingStatus.Completed).Sum(b => b.TotalAmount).ToString("N0")) VNĐ
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách người dùng gần đây -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Người dùng gần đây</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Vai trò</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in UserManager.Users.OrderByDescending(u => u.CreatedAt).Take(5))
+                        {
+                            <tr>
+                                <td>@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td>@user.PhoneNumber</td>
+                                <td>@user.Role</td>
+                                <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log kiểm tra booking Completed -->
+    @{
+        var completedBookings = _context.Bookings
+            .Include(b => b.Court)
+            .Where(b => b.Status == BookingStatus.Completed)
+            .OrderByDescending(b => b.BookingDate)
+            .ThenByDescending(b => b.StartTime)
+            .ToList();
+    }
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">LOG: Danh sách booking hoàn thành</div>
+        <div class="card-body">
+            @if (completedBookings.Count == 0)
+            {
+                <div class="alert alert-warning">Không có booking nào ở trạng thái Hoàn thành.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Sân</th>
+                                <th>Giờ</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var b in completedBookings)
+                            {
+                                <tr>
+                                    <td>@b.BookingID</td>
+                                    <td>@b.Court?.Name</td>
+                                    <td>@b.BookingDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@b.TotalAmount.ToString("N0") VNĐ</td>
+                                    <td>@b.Status</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+} 

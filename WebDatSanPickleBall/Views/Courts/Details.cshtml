@@ -1,0 +1,92 @@
+@model WebDatSanPickleBall.Models.CourtDetailsViewModel
+@{
+    ViewData["Title"] = "Chi tiết sân";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">@Model.Court.Name</h2>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">Thông tin sân</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Loại sân:</strong> @Model.Court.Type</p>
+                                <p><strong>Vị trí:</strong> @Model.Court.Location</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Giá:</strong> @Model.Court.Price.ToString("N0") VNĐ/giờ</p>
+                                <p>
+                                    <strong>Trạng thái:</strong>
+                                    @if (Model.Court.IsActive)
+                                    {
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Không hoạt động</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Court.Description))
+                    {
+                        <div class="mb-4">
+                            <h5 class="text-muted mb-3">Mô tả</h5>
+                            <p class="text-justify">@Model.Court.Description</p>
+                        </div>
+                    }
+
+                    @if (Model.Court.IsActive)
+                    {
+                        <div class="mt-4">
+                            <a asp-action="Book" asp-route-id="@Model.Court.Id" class="btn btn-primary">
+                                <i class="bi bi-calendar-plus"></i> Đặt sân
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Lịch đặt sân</h5>
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                locale: 'vi',
+                buttonText: {
+                    today: 'Hôm nay',
+                    month: 'Tháng',
+                    week: 'Tuần',
+                    day: 'Ngày'
+                },
+                events: @Html.Raw(Json.Serialize(Model.Bookings))
+            });
+            calendar.render();
+        });
+    </script>
+} 

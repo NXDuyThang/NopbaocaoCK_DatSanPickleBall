@@ -1,0 +1,54 @@
+@page "{id:int}"
+@model WebDatSanPickleBall.Areas.Admin.Pages.Courts.DetailsModel
+@{
+    ViewData["Title"] = "Chi tiết sân";
+    Layout = "/Areas/Admin/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Chi tiết sân</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <dl class="row">
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.Name)</dt>
+                        <dd class="col-sm-9">@Model.Court.Name</dd>
+
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.Location)</dt>
+                        <dd class="col-sm-9">@Model.Court.Location</dd>
+
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.Type)</dt>
+                        <dd class="col-sm-9">@Model.Court.Type</dd>
+
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.Price)</dt>
+                        <dd class="col-sm-9">@Model.Court.Price.ToString("N0") VNĐ/giờ</dd>
+
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.Description)</dt>
+                        <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Court.Description) ? "Không có mô tả" : Model.Court.Description)</dd>
+
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.IsActive)</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge @(Model.Court.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.Court.IsActive ? "Hoạt động" : "Không hoạt động")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Court.CreatedAt)</dt>
+                        <dd class="col-sm-9">@Model.Court.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a asp-page="./Edit" asp-route-id="@Model.Court.Id" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </a>
+                <a asp-page="./Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div> 

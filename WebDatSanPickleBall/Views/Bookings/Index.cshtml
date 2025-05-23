@@ -1,0 +1,161 @@
+﻿@model IEnumerable<DAL.Models.Booking>
+@{
+    ViewData["Title"] = "Lịch đặt sân";
+}
+
+<div class="container">
+    <h2 class="mb-4">Lịch đặt sân của bạn</h2>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Trạng thái</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Tất cả</option>
+                        <option value="Pending" selected="@(ViewData["Status"]?.ToString() == "Pending")">Chờ xác nhận</option>
+                        <option value="Confirmed" selected="@(ViewData["Status"]?.ToString() == "Confirmed")">Đã xác nhận</option>
+                        <option value="Cancelled" selected="@(ViewData["Status"]?.ToString() == "Cancelled")">Đã hủy</option>
+                        <option value="Completed" selected="@(ViewData["Status"]?.ToString() == "Completed")">Hoàn thành</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="fromDate" class="form-label">Từ ngày</label>
+                    <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                           value="@(ViewData["FromDate"]?.ToString() ?? "")">
+                </div>
+                <div class="col-md-3">
+                    <label for="toDate" class="form-label">Đến ngày</label>
+                    <input type="date" class="form-control" id="toDate" name="toDate" 
+                           value="@(ViewData["ToDate"]?.ToString() ?? "")">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Bạn chưa có lịch đặt sân nào.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Sân</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thanh toán</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="Home" asp-action="CourtDetails" asp-route-courtId="@booking.CourtID">
+                                    @booking.Court.Name
+                                </a>
+                            </td>
+                            <td>@booking.BookingDate.ToString("dd/MM/yyyy")</td>
+                            <td>@booking.Court.Price.ToString("N0") VNĐ</td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(booking.Status)">
+                                    @GetStatusText(booking.Status)
+                                </span>
+                            </td>
+                            <td>
+                                @if (booking.Status == DAL.Models.BookingStatus.Completed)
+                                {
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                }
+                                else if (booking.Payment != null)
+                                {
+                                    <span class="badge @GetPaymentStatusBadgeClass(booking.Payment.PaymentStatus)">
+                                        @booking.Payment.PaymentStatus
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Chưa thanh toán</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a asp-action="Details" asp-route-id="@booking.BookingID" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (CanCancelBooking(booking))
+                                    {
+                                        <a asp-action="CancelConfirmation" asp-route-id="@booking.BookingID"
+                                           class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-submit form when filters change
+        document.querySelectorAll('select, input[type="date"]').forEach(element => {
+            element.addEventListener('change', () => element.form.submit());
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(DAL.Models.BookingStatus status) => status switch
+    {
+        DAL.Models.BookingStatus.Pending => "bg-warning",
+        DAL.Models.BookingStatus.Confirmed => "bg-primary",
+        DAL.Models.BookingStatus.Cancelled => "bg-danger",
+        DAL.Models.BookingStatus.Completed => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    string GetStatusText(DAL.Models.BookingStatus status) => status switch
+    {
+        DAL.Models.BookingStatus.Pending => "Chờ xác nhận",
+        DAL.Models.BookingStatus.Confirmed => "Đã xác nhận",
+        DAL.Models.BookingStatus.Cancelled => "Đã hủy",
+        DAL.Models.BookingStatus.Completed => "Hoàn thành",
+        _ => status.ToString()
+    };
+
+    string GetPaymentStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-warning",
+        "Completed" => "bg-success",
+        "Failed" => "bg-danger",
+        "Refunded" => "bg-info",
+        _ => "bg-secondary"
+    };
+
+    bool CanCancelBooking(DAL.Models.Booking booking)
+    {
+        if (booking.Status != DAL.Models.BookingStatus.Pending && 
+            booking.Status != DAL.Models.BookingStatus.Confirmed)
+            return false;
+
+        var bookingDateTime = booking.BookingDate.ToDateTime(booking.StartTime);
+        return bookingDateTime > DateTime.Now;
+    }
+}

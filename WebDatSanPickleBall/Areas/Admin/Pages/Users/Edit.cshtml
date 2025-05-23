@@ -1,0 +1,31 @@
+@page "{id}"
+@model WebDatSanPickleBall.Areas.Admin.Pages.Users.EditModel
+@{
+    ViewData["Title"] = "Chỉnh sửa người dùng";
+    Layout = "/Areas/Admin/Pages/Shared/_AdminLayout.cshtml";
+}
+<h2>Chỉnh sửa người dùng</h2>
+<form method="post">
+    <input type="hidden" asp-for="User.Id" />
+    <div class="form-group">
+        <label asp-for="User.FullName"></label>
+        <input asp-for="User.FullName" class="form-control" />
+        <span asp-validation-for="User.FullName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="User.Email"></label>
+        <input asp-for="User.Email" class="form-control" />
+        <span asp-validation-for="User.Email" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="User.PhoneNumber"></label>
+        <input asp-for="User.PhoneNumber" class="form-control" />
+        <span asp-validation-for="User.PhoneNumber" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Vai trò</label>
+        <select asp-for="NewRole" class="form-control" asp-items="@(new SelectList(Model.Roles))"></select>
+    </div>
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a asp-page="Index" class="btn btn-secondary">Quay lại</a>
+</form> 

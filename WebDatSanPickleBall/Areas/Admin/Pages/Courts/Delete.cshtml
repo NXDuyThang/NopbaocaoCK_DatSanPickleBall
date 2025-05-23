@@ -1,0 +1,44 @@
+@page "{id:int}"
+@model WebDatSanPickleBall.Areas.Admin.Pages.Courts.DeleteModel
+@{
+    ViewData["Title"] = "Xóa sân";
+    Layout = "/Areas/Admin/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Xóa sân</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-danger">Bạn có chắc chắn muốn xóa sân này?</h3>
+            <div class="mt-4">
+                <dl class="row">
+                    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.Court.Name)</dt>
+                    <dd class="col-sm-10">@Model.Court.Name</dd>
+
+                    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.Court.Type)</dt>
+                    <dd class="col-sm-10">@Model.Court.Type</dd>
+
+                    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.Court.Price)</dt>
+                    <dd class="col-sm-10">@Model.Court.Price.ToString("N0") VNĐ/giờ</dd>
+
+                    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.Court.Description)</dt>
+                    <dd class="col-sm-10">@Model.Court.Description</dd>
+
+                    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.Court.IsActive)</dt>
+                    <dd class="col-sm-10">
+                        <span class="badge @(Model.Court.IsActive ? "bg-success" : "bg-danger")">
+                            @(Model.Court.IsActive ? "Hoạt động" : "Không hoạt động")
+                        </span>
+                    </dd>
+                </dl>
+
+                <form method="post">
+                    <input type="hidden" name="id" value="@Model.Court.Id" />
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                    <a asp-page="Index" class="btn btn-secondary">Quay lại</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> 

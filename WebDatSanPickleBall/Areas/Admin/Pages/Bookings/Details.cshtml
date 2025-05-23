@@ -1,0 +1,67 @@
+@page "{id:int}"
+@using DAL.Models
+@using DAL.Data
+@inject ApplicationDbContext _context
+@{
+    int bookingId = Convert.ToInt32(RouteData.Values["id"]);
+    var booking = _context.Bookings
+        .Where(b => b.BookingID == bookingId)
+        .Select(b => new {
+            b.BookingID,
+            b.BookingDate,
+            b.TotalAmount,
+            b.Status,
+            CourtName = b.Court != null ? b.Court.Name : "",
+            CourtPrice = b.Court != null ? b.Court.Price : 0,
+            UserFullName = b.User != null ? b.User.FullName : "",
+            UserEmail = b.User != null ? b.User.Email : ""
+        })
+        .FirstOrDefault();
+    ViewData["Title"] = "Chi tiết đặt sân";
+    string GetStatusBadgeClass(BookingStatus status) => status switch
+    {
+        BookingStatus.Pending => "bg-warning",
+        BookingStatus.Confirmed => "bg-primary",
+        BookingStatus.Cancelled => "bg-danger",
+        BookingStatus.Completed => "bg-success",
+        _ => "bg-secondary"
+    };
+    string GetStatusText(BookingStatus status) => status switch
+    {
+        BookingStatus.Pending => "Chờ xác nhận",
+        BookingStatus.Confirmed => "Đã xác nhận",
+        BookingStatus.Cancelled => "Đã hủy",
+        BookingStatus.Completed => "Hoàn thành",
+        _ => status.ToString()
+    };
+}
+
+@if (booking == null)
+{
+    <div class="alert alert-danger">Không tìm thấy đặt sân này.</div>
+}
+else
+{
+    <div class="container-fluid">
+        <h2 class="mb-4 text-primary">Chi tiết đặt sân</h2>
+        <dl class="row">
+            <dt class="col-sm-3">Sân</dt>
+            <dd class="col-sm-9">@booking.CourtName</dd>
+            <dt class="col-sm-3">Người đặt</dt>
+            <dd class="col-sm-9">@booking.UserFullName (@booking.UserEmail)</dd>
+            <dt class="col-sm-3">Ngày đặt</dt>
+            <dd class="col-sm-9">@booking.BookingDate.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Tổng tiền</dt>
+            <dd class="col-sm-9">@booking.CourtPrice.ToString("N0") VNĐ</dd>
+            <dt class="col-sm-3">Trạng thái</dt>
+            <dd class="col-sm-9">
+                <span class="badge @GetStatusBadgeClass(booking.Status)">
+                    @GetStatusText(booking.Status)
+                </span>
+            </dd>
+        </dl>
+        <a asp-area="Admin" asp-page="/Bookings/Index" class="btn btn-secondary mt-3">
+            <i class="bi bi-arrow-left"></i> Quay lại danh sách hoàn thành
+        </a>
+    </div>
+} 

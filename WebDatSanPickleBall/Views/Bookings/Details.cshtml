@@ -1,0 +1,109 @@
+@model DAL.Models.Booking
+@{
+    ViewData["Title"] = "Chi tiết đặt sân";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Chi tiết đặt sân</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Sân</dt>
+                        <dd class="col-sm-8">
+                            <a asp-controller="Home" asp-action="CourtDetails" asp-route-courtId="@Model.CourtID">
+                                @Model.Court.Name
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Ngày đặt</dt>
+                        <dd class="col-sm-8">@Model.BookingDate.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Tổng tiền</dt>
+                        <dd class="col-sm-8">@Model.Court.Price.ToString("N0") VNĐ</dd>
+
+                        <dt class="col-sm-4">Trạng thái</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @GetStatusBadgeClass(Model.Status)">
+                                @GetStatusText(Model.Status)
+                            </span>
+                        </dd>
+
+                        @if (Model.Payment != null)
+                        {
+                            <dt class="col-sm-4">Trạng thái thanh toán</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetPaymentStatusBadgeClass(Model.Payment.PaymentStatus)">
+                                    @Model.Payment.PaymentStatus
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Ngày thanh toán</dt>
+                            <dd class="col-sm-8">@Model.Payment.TransactionDate.ToString("dd/MM/yyyy HH:mm")</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Thao tác</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </a>
+                        @if (CanCancelBooking(Model))
+                        {
+                            <a asp-action="CancelConfirmation" asp-route-id="@Model.BookingID" 
+                               class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Hủy đặt sân
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(DAL.Models.BookingStatus status) => status switch
+    {
+        DAL.Models.BookingStatus.Pending => "bg-warning",
+        DAL.Models.BookingStatus.Confirmed => "bg-primary",
+        DAL.Models.BookingStatus.Cancelled => "bg-danger",
+        DAL.Models.BookingStatus.Completed => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    string GetStatusText(DAL.Models.BookingStatus status) => status switch
+    {
+        DAL.Models.BookingStatus.Pending => "Chờ xác nhận",
+        DAL.Models.BookingStatus.Confirmed => "Đã xác nhận",
+        DAL.Models.BookingStatus.Cancelled => "Đã hủy",
+        DAL.Models.BookingStatus.Completed => "Hoàn thành",
+        _ => status.ToString()
+    };
+
+    string GetPaymentStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-warning",
+        "Completed" => "bg-success",
+        "Failed" => "bg-danger",
+        "Refunded" => "bg-info",
+        _ => "bg-secondary"
+    };
+
+    bool CanCancelBooking(DAL.Models.Booking booking)
+    {
+        // Chỉ cho phép hủy khi trạng thái là Pending (chờ xác nhận)
+        return booking.Status == DAL.Models.BookingStatus.Pending;
+    }
+} 
